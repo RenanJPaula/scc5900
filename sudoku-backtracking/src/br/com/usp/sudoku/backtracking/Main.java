@@ -26,7 +26,7 @@ public class Main {
 
 			CommandLineParser parser = new DefaultParser();
 			CommandLine cmd = parser.parse(options, args);
-			
+
 			if (cmd.hasOption("h")) {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp("sudoku-backtracking", options);
@@ -35,9 +35,10 @@ public class Main {
 			} else {
 				String filePath = cmd.getOptionValue("f");
 				boolean verbose = cmd.hasOption("v");
-				
+
 				List<Integer[][]> sudokus = extractSudokusFromFile(filePath, verbose);
-				System.out.println(sudokus);
+				
+				new SuDokuBacktracking(sudokus.parallelStream()).solve();
 			}
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -50,32 +51,29 @@ public class Main {
 		final Pattern pattern = Pattern.compile(" ");
 
 		try {
-		    // Prepares file data, ignoring the number of test cases and the empty lines. Moreover, parse String values to Integer.
-		    final Iterator<Integer[]> preparedLines = 
-		    	Files.lines(Paths.get(filePath))
-	    		 .parallel()
-	    		 .filter(row -> {
-	    			return !(row == null || "".equals(row.trim())) && pattern.split(row).length == DIMENSION;
-    			 })
-	    		 .map(row -> {
-	    			return pattern.splitAsStream(row).map(Integer::parseInt).toArray(Integer[]::new);
-	    		 })
-	    		 .iterator();
+			// Prepares file data, ignoring the number of test cases and the
+			// empty lines. Moreover, parse String values to Integer.
+			final Iterator<Integer[]> preparedLines = Files.lines(Paths.get(filePath)).parallel().filter(row -> {
+				return !(row == null || "".equals(row.trim())) && pattern.split(row).length == DIMENSION;
+			}).map(row -> {
+				return pattern.splitAsStream(row).map(Integer::parseInt).toArray(Integer[]::new);
+			}).iterator();
 
-		    // Through of the preparedLines variable, creates the SuDoku matrices.
-		    Integer[][] sudoku = new Integer[DIMENSION][DIMENSION];
-		    Integer sudokuIndex = 0;
-		    
-		    while (preparedLines.hasNext()) {
+			// Through of the preparedLines variable, creates the SuDoku
+			// matrices.
+			Integer[][] sudoku = new Integer[DIMENSION][DIMENSION];
+			Integer sudokuIndex = 0;
+
+			while (preparedLines.hasNext()) {
 				final Integer[] row = preparedLines.next();
 				sudoku[sudokuIndex] = row;
 				if (++sudokuIndex == DIMENSION) {
-				    sudokus.add(sudoku);
-				    sudokuIndex = 0;
-				    sudoku = new Integer[DIMENSION][DIMENSION];
+					sudokus.add(sudoku);
+					sudokuIndex = 0;
+					sudoku = new Integer[DIMENSION][DIMENSION];
 				}
-		    }
-		    
+			}
+
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
