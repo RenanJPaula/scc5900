@@ -1,4 +1,4 @@
-reated by https://www.gitignore.io/api/java,eclipse
+# Created by https://www.gitignore.io/api/java,eclipse
 
 ### Java ###
 *.class
@@ -67,32 +67,3 @@ local.properties
 
 # Code Recommenders
 .recommenders/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
