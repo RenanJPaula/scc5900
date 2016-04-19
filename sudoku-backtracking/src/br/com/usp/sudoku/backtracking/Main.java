@@ -37,8 +37,9 @@ public class Main {
 				boolean verbose = cmd.hasOption("v");
 
 				List<Integer[][]> sudokus = extractSudokusFromFile(filePath, verbose);
-				
-				new SuDokuBacktracking(sudokus.parallelStream()).solve();
+				sudokus.parallelStream().forEach(sudoku -> {
+					new SuDokuBacktracking(sudoku).solve();
+				});
 			}
 		} catch (ParseException e) {
 			e.printStackTrace();

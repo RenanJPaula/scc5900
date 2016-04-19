@@ -1,79 +1,81 @@
 package br.com.usp.sudoku.backtracking;
 
-import java.util.stream.Stream;
-
 public class SuDokuBacktracking {
 
-	protected static final Integer DIMENSION = 9;
-	protected Stream<Integer[][]> sudokus;
+	private Integer[][] sudoku;
+	private final int size;
+	private final int boxOffset;
 
-	public SuDokuBacktracking(Stream<Integer[][]> sudokus) {
+	public SuDokuBacktracking(Integer[][] sudoku) {
 		super();
-		this.sudokus = sudokus;
+		this.sudoku = sudoku;
+		this.size = sudoku.length;
+		this.boxOffset = (int) Math.sqrt(this.size);
 	}
 
 	public void solve() {
-		this.sudokus.forEach(sudoku -> {
-			if (isSolved(0, 0, sudoku)) { // solves in place
-				write(sudoku, true);
-			} else {
-				System.err.println("Solution not found!");
-			}
-		});
+		if (process(0, 0)) {
+			print(false);
+		} else {
+			System.err.println("Solution not found!");
+		}
 	}
 
-	protected boolean isSolved(int i, int j, Integer[][] sudoku) {
-		if (i == DIMENSION) {
-			i = 0;
-			if (++j == DIMENSION) {
+	private boolean process(int row, int col) {
+		if (row == size) {
+			row = 0;
+			if (++col == size) {
 				return true;
 			}
 		}
-		if (sudoku[i][j] != 0) { // skip filled cells
-			return isSolved(i + 1, j, sudoku);
+
+		if (sudoku[row][col] != 0) {
+			return process(row + 1, col);
 		}
-		for (int value = 1; value <= DIMENSION; value++) {
-			if (isLegal(i, j, value, sudoku)) {
-				sudoku[i][j] = value;
-				if (isSolved(i + 1, j, sudoku)) {
+
+		for (int value = 1; value <= size; value++) {
+			if (isLegal(row, col, value, sudoku)) {
+				sudoku[row][col] = value;
+				if (process(row + 1, col)) {
 					return true;
 				}
 			}
 		}
-		sudoku[i][j] = 0; // reset on backtrack
+
+		sudoku[row][col] = 0;
 		return false;
 	}
 
-	protected boolean isLegal(int i, int j, int value, Integer[][] sudoku) {
-		for (int k = 0; k < DIMENSION; k++) { // row
-			if (value == sudoku[k][j]) {
+	protected boolean isLegal(int row, int col, int value, Integer[][] sudoku) {
+		int boxRow = ((row / 3) * 3) - 1;
+		int boxCol = 0;
+
+		for (int i = 0; i < size; i++) {
+			if (value == sudoku[row][i] || value == sudoku[i][col]) {
 				return false;
-			}
-		}
-		for (int k = 0; k < DIMENSION; k++) { // column
-			if (value == sudoku[i][k]) {
-				return false;
-			}
-		}
-		final int boxRowOffset = (i / 3) * 3;
-		final int boxColOffset = (j / 3) * 3;
-		for (int k = 0; k < 3; k++) { // box
-			for (int m = 0; m < 3; m++) {
-				if (value == sudoku[boxRowOffset + k][boxColOffset + m]) {
+			} else {
+				int index = i % boxOffset;
+				if (index == 0) {
+					boxRow++;
+					boxCol = (col / 3) * 3;
+				}
+
+				if (value == sudoku[boxRow][boxCol + index]) {
 					return false;
 				}
 			}
 		}
-		return true; // no violations, so it's legal
+
+		return true;
 	}
 
-	protected synchronized void write(Integer[][] sudoku, boolean isFormatted) {
+	protected synchronized void print(boolean isFormatted) {
 		if (isFormatted) {
-			for (int i = 0; i < DIMENSION; i++) {
+			for (int i = 0; i < size; i++) {
 				if (i % 3 == 0) {
 					System.out.println(" -----------------------");
 				}
-				for (int j = 0; j < DIMENSION; j++) {
+				for (int j = 0; j < size; j++) {
 					if (j % 3 == 0) {
 						System.out.print("| ");
 					}
@@ -83,8 +85,8 @@ public class SuDokuBacktracking {
 			}
 			System.out.println(" -----------------------");
 		} else {
-			for (int i = 0; i < DIMENSION; i++) {
-				for (int j = 0; j < DIMENSION; j++) {
+			for (int i = 0; i < size; i++) {
+				for (int j = 0; j < size; j++) {
 					System.out.printf("%d ", sudoku[i][j]);
 				}
 				System.out.println();
