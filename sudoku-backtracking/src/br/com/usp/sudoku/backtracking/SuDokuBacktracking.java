@@ -34,7 +34,7 @@ public class SuDokuBacktracking {
 		}
 
 		for (int value = 1; value <= size; value++) {
-			if (isLegal(row, col, value, sudoku)) {
+			if (isLegal(row, col, value)) {
 				sudoku[row][col] = value;
 				if (process(row + 1, col)) {
 					return true;
@@ -46,7 +46,7 @@ public class SuDokuBacktracking {
 		return false;
 	}
 
-	protected boolean isLegal(int row, int col, int value, Integer[][] sudoku) {
+	protected boolean isLegal(int row, int col, int value) {
 		int boxRow = ((row / 3) * 3) - 1;
 		int boxCol = 0;
 
