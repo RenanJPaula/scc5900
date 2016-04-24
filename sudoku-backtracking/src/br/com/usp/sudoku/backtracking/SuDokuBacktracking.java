@@ -1,10 +1,21 @@
 package br.com.usp.sudoku.backtracking;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+
 public class SuDokuBacktracking {
 
 	private Integer[][] sudoku;
 	private final int size;
 	private final int boxOffset;
+	private boolean verbose;
+	private boolean benchmark;
+	private long beginTime;
+	private long endTime;
+	private boolean forwardChecking;
+	private Map<String, Queue<Integer>> solutionSet;
 
 	public SuDokuBacktracking(Integer[][] sudoku) {
 		super();
@@ -13,15 +24,119 @@ public class SuDokuBacktracking {
 		this.boxOffset = (int) Math.sqrt(this.size);
 	}
 
-	public void solve() {
+	public SuDokuBacktracking activeBenchmark() {
+		this.benchmark = true;
+		return this;
+	}
+
+	public SuDokuBacktracking activeVerbose() {
+		this.verbose = true;
+		return this;
+	}
+
+	public SuDokuBacktracking activeForwardChecking() {
+		this.forwardChecking = true;
+		return this;
+	}
+
+	public SuDokuBacktracking solve() {
+		beginTime = System.nanoTime();
+
+		if (forwardChecking) {
+			initForwardChecking();
+		}
+
 		if (process(0, 0)) {
-			print(false);
+			if (verbose) {
+				print(false);
+			}
 		} else {
 			System.err.println("Solution not found!");
+		}
+
+		endTime = System.nanoTime();
+
+		if (benchmark) {
+			System.out.printf("Solve in: %.3f seconds \n", (endTime - beginTime) / 1000000000d);
+		}
+		return this;
+	}
+
+	private void initForwardChecking() {
+		this.solutionSet = new HashMap<>();
+
+		for (int row = 0; row < size; row++) {
+			for (int col = 0; col < size; col++) {
+				final Queue<Integer> values = new LinkedList<>();
+
+				if (sudoku[row][col] == 0) {
+					for (int value = 1; value <= size; value++) {
+						if (isLegal(row, col, value)) {
+							values.add(value);
+						}
+					}
+				}
+				solutionSet.put(getSolutionSetKey(row, col), values);
+			}
+		}
+	}
+
+	private String getSolutionSetKey(int row, int col) {
+		return new StringBuilder().append(row).append(col).toString();
+	}
+
+	private void removeOfSolutionSetSpace(int row, int col, Integer value) {
+		int boxRow = ((row / 3) * 3) - 1;
+		int boxCol = 0;
+
+		for (int i = 0; i < size; i++) {
+			solutionSet.get(getSolutionSetKey(row, i)).remove(value);
+			solutionSet.get(getSolutionSetKey(i, col)).remove(value);
+
+			int index = i % boxOffset;
+			if (index == 0) {
+				boxRow++;
+				boxCol = (col / 3) * 3;
+			}
+
+			solutionSet.get(getSolutionSetKey(boxRow, boxCol + index)).remove(value);
+		}
+	}
+
+	private void addOnSolutionSetSpace(int row, int col, Integer value, boolean addInPosition) {
+		int boxRow = ((row / 3) * 3) - 1;
+		int boxCol = 0;
+
+		for (int i = 0; i < size; i++) {
+			if (i != col && isLegal(row, i, value)) {
+				solutionSet.get(getSolutionSetKey(row, i)).add(value);
+			}
+
+			if (i != col && isLegal(i, col, value)) {
+				solutionSet.get(getSolutionSetKey(i, col)).add(value);
+			}
+
+			int index = i % boxOffset;
+			if (index == 0) {
+				boxRow++;
+				boxCol = (col / 3) * 3;
+			}
+
+			int boxColWithOffiset = boxCol + index;
+			if (boxRow != row && boxColWithOffiset != col && isLegal(boxRow, boxColWithOffiset, value)) {
+				solutionSet.get(getSolutionSetKey(boxRow, boxColWithOffiset)).add(value);
+			}
+		}
+
+		if (addInPosition) {
+			solutionSet.get(getSolutionSetKey(row, col)).add(value);
+		} else {
+			solutionSet.get(getSolutionSetKey(row, col)).remove(value);
 		}
 	}
 
 	private boolean process(int row, int col) {
+		System.out.println(getSolutionSetKey(row, col));
 		if (row == size) {
 			row = 0;
 			if (++col == size) {
@@ -33,11 +148,27 @@ public class SuDokuBacktracking {
 			return process(row + 1, col);
 		}
 
-		for (int value = 1; value <= size; value++) {
-			if (isLegal(row, col, value)) {
+		if (forwardChecking) {
+			Queue<Integer> solutionStack = solutionSet.get(getSolutionSetKey(row, col));
+			while (solutionStack.size() > 0) {
+				Integer value = solutionStack.remove();
 				sudoku[row][col] = value;
+				removeOfSolutionSetSpace(row, col, value);
+
 				if (process(row + 1, col)) {
 					return true;
+				} else {
+					sudoku[row][col] = 0;
+					addOnSolutionSetSpace(row, col, value, false);
+				}
+			}
+		} else {
+			for (int value = 1; value <= size; value++) {
+				if (isLegal(row, col, value)) {
+					sudoku[row][col] = value;
+					if (process(row + 1, col)) {
+						return true;
+					}
 				}
 			}
 		}
@@ -46,7 +177,7 @@ public class SuDokuBacktracking {
 		return false;
 	}
 
-	protected boolean isLegal(int row, int col, int value) {
+	private boolean isLegal(int row, int col, int value) {
 		int boxRow = ((row / 3) * 3) - 1;
 		int boxCol = 0;
 
@@ -69,7 +200,7 @@ public class SuDokuBacktracking {
 		return true;
 	}
 
-	protected synchronized void print(boolean isFormatted) {
+	private synchronized void print(boolean isFormatted) {
 		if (isFormatted) {
 			for (int i = 0; i < size; i++) {
 				if (i % 3 == 0) {

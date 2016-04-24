@@ -22,23 +22,43 @@ public class Main {
 			Options options = new Options();
 			options.addOption("h", "help", false, "command overview");
 			options.addOption("v", "verbose", false, "show log of process");
+			options.addOption("b", "benchmark", false, "active benchmark");
+			options.addOption("fc", "forwardchecking", false, "active forward checking");
 			options.addOption("f", "file", true, "file path [required]");
 
 			CommandLineParser parser = new DefaultParser();
 			CommandLine cmd = parser.parse(options, args);
 
-			if (cmd.hasOption("h")) {
+			boolean help = cmd.hasOption("h");
+			String filePath = cmd.getOptionValue("f");
+			boolean verbose = cmd.hasOption("v");
+			boolean benchmark = cmd.hasOption("b");
+			boolean forwardChecking = cmd.hasOption("fc");
+
+			if (help) {
 				HelpFormatter formatter = new HelpFormatter();
 				formatter.printHelp("sudoku-backtracking", options);
-			} else if (!cmd.hasOption("f")) {
+			} else if (filePath == null) {
 				System.out.println("File is required. See more in -h or --help options.");
 			} else {
-				String filePath = cmd.getOptionValue("f");
-				boolean verbose = cmd.hasOption("v");
-
 				List<Integer[][]> sudokus = extractSudokusFromFile(filePath, verbose);
-				sudokus.parallelStream().forEach(sudoku -> {
-					new SuDokuBacktracking(sudoku).solve();
+
+				sudokus.forEach(sudoku -> {
+					SuDokuBacktracking suDokuBacktracking = new SuDokuBacktracking(sudoku);
+
+					if (verbose) {
+						suDokuBacktracking.activeVerbose();
+					}
+
+					if (benchmark) {
+						suDokuBacktracking.activeBenchmark();
+					}
+
+					if (forwardChecking) {
+						suDokuBacktracking.activeForwardChecking();
+					}
+
+					suDokuBacktracking.solve();
 				});
 			}
 		} catch (ParseException e) {
