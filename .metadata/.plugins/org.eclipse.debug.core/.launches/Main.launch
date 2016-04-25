@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/sudoku-backtracking/src/br/com/usp/sudoku/backtracking/Main.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="br.com.usp.sudoku.backtracking.Main"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-f /home/renanjpaula/workspace/java/scc5900/sudoku-backtracking/data/entrada95.txt -b -fc"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="sudoku-backtracking"/>
+</launchConfiguration>

@@ -1,0 +1,99 @@
+package br.com.usp.sudoku.backtracking;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
+public class Main {
+
+	public static void main(String[] args) {
+		try {
+			Options options = new Options();
+			options.addOption("h", "help", false, "command overview");
+			options.addOption("b", "benchmark", false, "active benchmark statistics");
+			options.addOption("fc", "forwardchecking", false, "active forward checking");
+			options.addOption("f", "file", true, "file path [required]");
+
+			CommandLineParser parser = new DefaultParser();
+			CommandLine cmd = parser.parse(options, args);
+
+			boolean help = cmd.hasOption("h");
+			String filePath = cmd.getOptionValue("f");
+			boolean benchmark = cmd.hasOption("b");
+			boolean forwardChecking = cmd.hasOption("fc");
+
+			if (help) {
+				HelpFormatter formatter = new HelpFormatter();
+				formatter.printHelp("sudoku-backtracking", options);
+			} else if (filePath == null) {
+				System.out.println("File is required. See more in -h or --help options.");
+			} else {
+				List<Integer[][]> sudokus = extractSudokusFromFile(filePath);
+
+				sudokus.forEach(sudoku -> {
+					SuDokuBacktracking suDokuBacktracking = new SuDokuBacktracking(sudoku);
+
+					if (benchmark) {
+						suDokuBacktracking.activeBenchmark();
+					}
+
+					if (forwardChecking) {
+						suDokuBacktracking.activeForwardChecking();
+					}
+
+					suDokuBacktracking.solve();
+				});
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static List<Integer[][]> extractSudokusFromFile(String filePath) {
+		final List<Integer[][]> sudokus = new ArrayList<>();
+		final Integer DIMENSION = 9;
+		final Pattern pattern = Pattern.compile(" ");
+
+		try {
+			// Prepares file data, ignoring the number of test cases and the
+			// empty lines. Moreover, parse String values to Integer.
+			final Iterator<Integer[]> preparedLines = Files.lines(Paths.get(filePath)).parallel().filter(row -> {
+				return !(row == null || "".equals(row.trim())) && pattern.split(row).length == DIMENSION;
+			}).map(row -> {
+				return pattern.splitAsStream(row).map(Integer::parseInt).toArray(Integer[]::new);
+			}).iterator();
+
+			// Through of the preparedLines variable, creates the SuDoku
+			// matrices.
+			Integer[][] sudoku = new Integer[DIMENSION][DIMENSION];
+			Integer sudokuIndex = 0;
+
+			while (preparedLines.hasNext()) {
+				final Integer[] row = preparedLines.next();
+				sudoku[sudokuIndex] = row;
+				if (++sudokuIndex == DIMENSION) {
+					sudokus.add(sudoku);
+					sudokuIndex = 0;
+					sudoku = new Integer[DIMENSION][DIMENSION];
+				}
+			}
+
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		return sudokus;
+	}
+
+}

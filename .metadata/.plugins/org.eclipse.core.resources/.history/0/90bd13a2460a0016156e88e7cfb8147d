@@ -1,0 +1,180 @@
+package br.com.usp.sudoku.backtracking;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+public class SuDokuBacktracking {
+
+	private Integer[][] sudoku;
+	private final int size;
+	private final int boxOffset;
+	private boolean verbose;
+	private boolean benchmark;
+	private long beginTime;
+	private long endTime;
+	private boolean forwardChecking;
+	private Map<String, Stack<Integer>> solutionSet;
+
+	public SuDokuBacktracking(Integer[][] sudoku) {
+		super();
+		this.sudoku = sudoku;
+		this.size = sudoku.length;
+		this.boxOffset = (int) Math.sqrt(this.size);
+	}
+
+	public SuDokuBacktracking activeBenchmark() {
+		this.benchmark = true;
+		return this;
+	}
+
+	public SuDokuBacktracking activeVerbose() {
+		this.verbose = true;
+		return this;
+	}
+
+	public SuDokuBacktracking activeForwardChecking() {
+		this.forwardChecking = true;
+		return this;
+	}
+
+	public SuDokuBacktracking solve() {
+		beginTime = System.nanoTime();
+
+		if (forwardChecking) {
+			initForwardChecking();
+		}
+
+		if (process(0, 0)) {
+			if (verbose) {
+				print(false);
+			}
+		} else {
+			System.err.println("Solution not found!");
+		}
+
+		endTime = System.nanoTime();
+
+		if (benchmark) {
+			System.out.printf("Solve in: %.3f seconds \n", (endTime - beginTime) / 1000000000d);
+		}
+		return this;
+	}
+
+	private void initForwardChecking() {
+		this.solutionSet = new HashMap<>();
+
+		for (int row = 0; row < size; row++) {
+			for (int col = 0; col < size; col++) {
+				final Stack<Integer> values = new Stack<>();
+
+				if (sudoku[row][col] == 0) {
+					for (int value = 1; value <= size; value++) {
+						if (isLegal(row, col, value)) {
+							values.push(value);
+						}
+					}
+				}
+				solutionSet.put(getSolutionSetKey(row, col), values);
+			}
+		}
+	}
+
+	private String getSolutionSetKey(int row, int col) {
+		return new StringBuilder().append(row).append(col).toString();
+	}
+
+	private boolean process(int row, int col) {
+		if (row == size) {
+			row = 0;
+			if (++col == size) {
+				return true;
+			}
+		}
+
+		if (sudoku[row][col] != 0) {
+			return process(row + 1, col);
+		}
+
+		if (forwardChecking) {
+			// se ForwardChecking pegar possíveis valores do conjunto de
+			// soluções
+			// se não houver valor no conjunto de solução para uma posição
+			// backtracking
+			Stack<Integer> solutionStack = solutionSet.get(getSolutionSetKey(row, col));
+			if (solutionStack.size() > 0) {
+				Integer value = solutionStack.pop();
+				sudoku[row][col] = value;
+				if (process(row + 1, col)) {
+					return true;
+				} else {
+					sudoku[row][col] = 0;
+					return false;
+				}
+			}
+		} else {
+			for (int value = 1; value <= size; value++) {
+				if (isLegal(row, col, value)) {
+					sudoku[row][col] = value;
+					if (process(row + 1, col)) {
+						return true;
+					}
+				}
+			}
+		}
+
+		// se backtraking remover valor do conjunto de soluções
+		sudoku[row][col] = 0;
+		return false;
+	}
+
+	private boolean isLegal(int row, int col, int value) {
+		int boxRow = ((row / 3) * 3) - 1;
+		int boxCol = 0;
+
+		for (int i = 0; i < size; i++) {
+			if (value == sudoku[row][i] || value == sudoku[i][col]) {
+				return false;
+			} else {
+				int index = i % boxOffset;
+				if (index == 0) {
+					boxRow++;
+					boxCol = (col / 3) * 3;
+				}
+
+				if (value == sudoku[boxRow][boxCol + index]) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	private synchronized void print(boolean isFormatted) {
+		if (isFormatted) {
+			for (int i = 0; i < size; i++) {
+				if (i % 3 == 0) {
+					System.out.println(" -----------------------");
+				}
+				for (int j = 0; j < size; j++) {
+					if (j % 3 == 0) {
+						System.out.print("| ");
+					}
+					System.out.printf("%s ", sudoku[i][j] == 0 ? " " : Integer.toString(sudoku[i][j]));
+				}
+				System.out.println("|");
+			}
+			System.out.println(" -----------------------");
+		} else {
+			for (int i = 0; i < size; i++) {
+				for (int j = 0; j < size; j++) {
+					System.out.printf("%d ", sudoku[i][j]);
+				}
+				System.out.println();
+			}
+			System.out.println();
+		}
+	}
+
+}

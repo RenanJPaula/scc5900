@@ -1,0 +1,242 @@
+package br.com.usp.sudoku.backtracking;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+
+public class SuDokuBacktracking {
+
+	private Integer[][] sudoku;
+	private int size;
+	private int boxOffset;
+	private long maxAllocationCount;
+	private long beginTime;
+	private long endTime;
+	private long allocationCount;
+	private boolean forwardChecking;
+	private Map<String, Queue<Integer>> solutionSet;
+
+	public SuDokuBacktracking(Integer[][] sudoku) {
+		super();
+		this.sudoku = sudoku;
+		this.size = sudoku.length;
+		this.boxOffset = (int) Math.sqrt(this.size);
+	}
+
+	public Integer[][] getSudoku() {
+		return sudoku;
+	}
+
+	public void setSudoku(Integer[][] sudoku) {
+		this.sudoku = sudoku;
+		this.size = sudoku.length;
+		this.boxOffset = (int) Math.sqrt(this.size);
+	}
+
+	public long getMaxAllocationCount() {
+		return maxAllocationCount;
+	}
+
+	public void setMaxAllocationCount(long maxAllocationCount) {
+		this.maxAllocationCount = maxAllocationCount;
+	}
+
+	public long getBeginTime() {
+		return beginTime;
+	}
+
+	public void setBeginTime(long beginTime) {
+		this.beginTime = beginTime;
+	}
+
+	public long getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+
+	public long getAllocationCount() {
+		return allocationCount;
+	}
+
+	public void setAllocationCount(long allocationCount) {
+		this.allocationCount = allocationCount;
+	}
+
+	public boolean isForwardChecking() {
+		return forwardChecking;
+	}
+
+	public void setForwardChecking(boolean forwardChecking) {
+		this.forwardChecking = forwardChecking;
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	private boolean setSudokuValue(int row, int col, int value) {
+		allocationCount++;
+		if (maxAllocationCount > 0 && allocationCount < maxAllocationCount) {
+			return false;
+		}
+		sudoku[row][col] = value;
+		return true;
+	}
+
+	public boolean solve() {
+		boolean solve;
+		beginTime = System.nanoTime();
+
+		if (forwardChecking) {
+			initForwardChecking();
+		}
+
+		solve = process(0, 0);
+
+		endTime = System.nanoTime();
+
+		return solve;
+	}
+
+	private void initForwardChecking() {
+		this.solutionSet = new HashMap<>();
+
+		for (int row = 0; row < size; row++) {
+			for (int col = 0; col < size; col++) {
+				final Queue<Integer> values = new LinkedList<>();
+
+				if (sudoku[row][col] == 0) {
+					for (int value = 1; value <= size; value++) {
+						if (isLegal(row, col, value)) {
+							values.add(value);
+						}
+					}
+				}
+				solutionSet.put(getSolutionSetKey(row, col), values);
+			}
+		}
+	}
+
+	private String getSolutionSetKey(int row, int col) {
+		return new StringBuilder().append(row).append(col).toString();
+	}
+
+	private void removeOfSolutionSetSpace(int row, int col, Integer value) {
+		int boxRow = ((row / 3) * 3) - 1;
+		int boxCol = 0;
+
+		for (int i = 0; i < size; i++) {
+			solutionSet.get(getSolutionSetKey(row, i)).remove(value);
+			solutionSet.get(getSolutionSetKey(i, col)).remove(value);
+
+			int index = i % boxOffset;
+			if (index == 0) {
+				boxRow++;
+				boxCol = (col / 3) * 3;
+			}
+
+			solutionSet.get(getSolutionSetKey(boxRow, boxCol + index)).remove(value);
+		}
+	}
+
+	private void addOnSolutionSetSpace(int row, int col, Integer value, boolean addInPosition) {
+		int boxRow = ((row / 3) * 3) - 1;
+		int boxCol = 0;
+
+		for (int i = 0; i < size; i++) {
+			if (i != col && isLegal(row, i, value)) {
+				solutionSet.get(getSolutionSetKey(row, i)).add(value);
+			}
+
+			if (i != col && isLegal(i, col, value)) {
+				solutionSet.get(getSolutionSetKey(i, col)).add(value);
+			}
+
+			int index = i % boxOffset;
+			if (index == 0) {
+				boxRow++;
+				boxCol = (col / 3) * 3;
+			}
+
+			int boxColWithOffiset = boxCol + index;
+			if (boxRow != row && boxColWithOffiset != col && isLegal(boxRow, boxColWithOffiset, value)) {
+				solutionSet.get(getSolutionSetKey(boxRow, boxColWithOffiset)).add(value);
+			}
+		}
+
+		if (addInPosition) {
+			solutionSet.get(getSolutionSetKey(row, col)).add(value);
+		} else {
+			solutionSet.get(getSolutionSetKey(row, col)).remove(value);
+		}
+	}
+
+	private boolean process(int row, int col) {
+		if (row == size) {
+			row = 0;
+			if (++col == size) {
+				return true;
+			}
+		}
+
+		if (sudoku[row][col] != 0) {
+			return process(row + 1, col);
+		}
+
+		if (forwardChecking) {
+			Queue<Integer> solutionStack = solutionSet.get(getSolutionSetKey(row, col));
+			while (solutionStack.size() > 0) {
+				Integer value = solutionStack.remove();
+				sudoku[row][col] = value;
+				removeOfSolutionSetSpace(row, col, value);
+
+				if (process(row + 1, col)) {
+					return true;
+				} else {
+					sudoku[row][col] = 0;
+					addOnSolutionSetSpace(row, col, value, false);
+				}
+			}
+		} else {
+			for (int value = 1; value <= size; value++) {
+				if (isLegal(row, col, value)) {
+					this.setSudokuValue(row, col, value);
+					if (process(row + 1, col)) {
+						return true;
+					}
+				}
+			}
+		}
+
+		this.setSudokuValue(row, col, 0);
+		return false;
+	}
+
+	private boolean isLegal(int row, int col, int value) {
+		int boxRow = ((row / 3) * 3) - 1;
+		int boxCol = 0;
+
+		for (int i = 0; i < size; i++) {
+			if (value == sudoku[row][i] || value == sudoku[i][col]) {
+				return false;
+			} else {
+				int index = i % boxOffset;
+				if (index == 0) {
+					boxRow++;
+					boxCol = (col / 3) * 3;
+				}
+
+				if (value == sudoku[boxRow][boxCol + index]) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+}

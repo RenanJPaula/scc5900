@@ -1,0 +1,2 @@
+eclipse.preferences.version=1
+prefWatchExpressions=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<watchExpressions>\n<expression enabled\="true" text\="row"/>\n<expression enabled\="true" text\="col"/>\n<expression enabled\="true" text\="value.toString()"/>\n<expression enabled\="true" text\="solutionSet.get(getSolutionSetKey(6, 1)).toString()"/>\n</watchExpressions>\n

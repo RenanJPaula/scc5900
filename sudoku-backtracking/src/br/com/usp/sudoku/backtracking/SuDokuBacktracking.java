@@ -86,7 +86,7 @@ public class SuDokuBacktracking {
 		if (maxSteps > 0 && stepsCount >= maxSteps) {
 			return false;
 		}
-		return false;
+		return true;
 	}
 
 	public boolean solve() {
@@ -160,6 +160,9 @@ public class SuDokuBacktracking {
 		if (forwardChecking) {
 			LinkedList<Integer> solutionQueue = solutionSet.get(getSolutionSetKey(row, col));
 			while (solutionQueue.size() > 0) {
+				if(!validateSteps()) {
+					return false;
+				}
 				HashMap<String, LinkedList<Integer>> solutionSetClone = cloneSolutionSet();
 				Integer value = solutionQueue.remove();
 				sudoku[row][col] = value;
@@ -176,6 +179,9 @@ public class SuDokuBacktracking {
 			}
 		} else {
 			for (int value = 1; value <= size; value++) {
+				if(!validateSteps()) {
+					return false;
+				}
 				if (isLegal(row, col, value)) {
 					sudoku[row][col] = value;
 

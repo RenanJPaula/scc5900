@@ -1,0 +1,6 @@
+1461087161013	Rename method 'solve'
+1461087174845	Rename method 'resolve'
+1461087376470	Rename field 'dimension'
+1461089128049	Rename local variable 'i'
+1461096299797	Extract local variable 'j'
+1461243407114	Extract local variable 'suDokuBacktracking'
