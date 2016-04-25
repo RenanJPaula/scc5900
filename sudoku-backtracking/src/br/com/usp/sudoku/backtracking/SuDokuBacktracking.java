@@ -2,20 +2,19 @@ package br.com.usp.sudoku.backtracking;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
+import java.util.Set;
 
 public class SuDokuBacktracking {
 
 	private Integer[][] sudoku;
-	private final int size;
-	private final int boxOffset;
-	private boolean verbose;
-	private boolean benchmark;
+	private int size;
+	private int boxOffset;
+	private long maxSteps;
 	private long beginTime;
 	private long endTime;
+	private long stepsCount;
 	private boolean forwardChecking;
-	private Map<String, Queue<Integer>> solutionSet;
+	private HashMap<String, LinkedList<Integer>> solutionSet;
 
 	public SuDokuBacktracking(Integer[][] sudoku) {
 		super();
@@ -24,42 +23,85 @@ public class SuDokuBacktracking {
 		this.boxOffset = (int) Math.sqrt(this.size);
 	}
 
-	public SuDokuBacktracking activeBenchmark() {
-		this.benchmark = true;
-		return this;
+	public Integer[][] getSudoku() {
+		return sudoku;
 	}
 
-	public SuDokuBacktracking activeVerbose() {
-		this.verbose = true;
-		return this;
+	public void setSudoku(Integer[][] sudoku) {
+		this.sudoku = sudoku;
+		this.size = sudoku.length;
+		this.boxOffset = (int) Math.sqrt(this.size);
 	}
 
-	public SuDokuBacktracking activeForwardChecking() {
-		this.forwardChecking = true;
-		return this;
+	public long getMaxAllocationCount() {
+		return maxSteps;
 	}
 
-	public SuDokuBacktracking solve() {
+	public void setMaxAllocationCount(long maxAllocationCount) {
+		this.maxSteps = maxAllocationCount;
+	}
+
+	public long getBeginTime() {
+		return beginTime;
+	}
+
+	public void setBeginTime(long beginTime) {
+		this.beginTime = beginTime;
+	}
+
+	public long getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+
+	public long getStepsCount() {
+		return stepsCount;
+	}
+
+	public void setStepsCount(long stepsCount) {
+		this.stepsCount = stepsCount;
+	}
+
+	public boolean isForwardChecking() {
+		return forwardChecking;
+	}
+
+	public void setForwardChecking(boolean forwardChecking) {
+		this.forwardChecking = forwardChecking;
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	public Double getTimeInSeconds() {
+		return (endTime - beginTime) / 1000000000d;
+	}
+
+	private boolean validateSteps() {
+		stepsCount++;
+		if (maxSteps > 0 && stepsCount >= maxSteps) {
+			return false;
+		}
+		return false;
+	}
+
+	public boolean solve() {
+		boolean solve;
 		beginTime = System.nanoTime();
 
 		if (forwardChecking) {
 			initForwardChecking();
 		}
 
-		if (process(0, 0)) {
-			if (verbose) {
-				print(false);
-			}
-		} else {
-			System.err.println("Solution not found!");
-		}
+		solve = process(0, 0);
 
 		endTime = System.nanoTime();
 
-		if (benchmark) {
-			System.out.printf("Solve in: %.3f seconds \n", (endTime - beginTime) / 1000000000d);
-		}
-		return this;
+		return solve;
 	}
 
 	private void initForwardChecking() {
@@ -67,7 +109,7 @@ public class SuDokuBacktracking {
 
 		for (int row = 0; row < size; row++) {
 			for (int col = 0; col < size; col++) {
-				final Queue<Integer> values = new LinkedList<>();
+				final LinkedList<Integer> values = new LinkedList<>();
 
 				if (sudoku[row][col] == 0) {
 					for (int value = 1; value <= size; value++) {
@@ -103,40 +145,7 @@ public class SuDokuBacktracking {
 		}
 	}
 
-	private void addOnSolutionSetSpace(int row, int col, Integer value, boolean addInPosition) {
-		int boxRow = ((row / 3) * 3) - 1;
-		int boxCol = 0;
-
-		for (int i = 0; i < size; i++) {
-			if (i != col && isLegal(row, i, value)) {
-				solutionSet.get(getSolutionSetKey(row, i)).add(value);
-			}
-
-			if (i != col && isLegal(i, col, value)) {
-				solutionSet.get(getSolutionSetKey(i, col)).add(value);
-			}
-
-			int index = i % boxOffset;
-			if (index == 0) {
-				boxRow++;
-				boxCol = (col / 3) * 3;
-			}
-
-			int boxColWithOffiset = boxCol + index;
-			if (boxRow != row && boxColWithOffiset != col && isLegal(boxRow, boxColWithOffiset, value)) {
-				solutionSet.get(getSolutionSetKey(boxRow, boxColWithOffiset)).add(value);
-			}
-		}
-
-		if (addInPosition) {
-			solutionSet.get(getSolutionSetKey(row, col)).add(value);
-		} else {
-			solutionSet.get(getSolutionSetKey(row, col)).remove(value);
-		}
-	}
-
 	private boolean process(int row, int col) {
-		System.out.println(getSolutionSetKey(row, col));
 		if (row == size) {
 			row = 0;
 			if (++col == size) {
@@ -149,9 +158,10 @@ public class SuDokuBacktracking {
 		}
 
 		if (forwardChecking) {
-			Queue<Integer> solutionStack = solutionSet.get(getSolutionSetKey(row, col));
-			while (solutionStack.size() > 0) {
-				Integer value = solutionStack.remove();
+			LinkedList<Integer> solutionQueue = solutionSet.get(getSolutionSetKey(row, col));
+			while (solutionQueue.size() > 0) {
+				HashMap<String, LinkedList<Integer>> solutionSetClone = cloneSolutionSet();
+				Integer value = solutionQueue.remove();
 				sudoku[row][col] = value;
 				removeOfSolutionSetSpace(row, col, value);
 
@@ -159,13 +169,16 @@ public class SuDokuBacktracking {
 					return true;
 				} else {
 					sudoku[row][col] = 0;
-					addOnSolutionSetSpace(row, col, value, false);
+					solutionSet = solutionSetClone;
+					solutionQueue = solutionSet.get(getSolutionSetKey(row, col));
+					solutionQueue.remove(value);
 				}
 			}
 		} else {
 			for (int value = 1; value <= size; value++) {
 				if (isLegal(row, col, value)) {
 					sudoku[row][col] = value;
+
 					if (process(row + 1, col)) {
 						return true;
 					}
@@ -200,30 +213,16 @@ public class SuDokuBacktracking {
 		return true;
 	}
 
-	private synchronized void print(boolean isFormatted) {
-		if (isFormatted) {
-			for (int i = 0; i < size; i++) {
-				if (i % 3 == 0) {
-					System.out.println(" -----------------------");
-				}
-				for (int j = 0; j < size; j++) {
-					if (j % 3 == 0) {
-						System.out.print("| ");
-					}
-					System.out.printf("%s ", sudoku[i][j] == 0 ? " " : Integer.toString(sudoku[i][j]));
-				}
-				System.out.println("|");
-			}
-			System.out.println(" -----------------------");
-		} else {
-			for (int i = 0; i < size; i++) {
-				for (int j = 0; j < size; j++) {
-					System.out.printf("%d ", sudoku[i][j]);
-				}
-				System.out.println();
-			}
-			System.out.println();
+	@SuppressWarnings("unchecked")
+	private HashMap<String, LinkedList<Integer>> cloneSolutionSet() {
+		HashMap<String, LinkedList<Integer>> cloneMap = new HashMap<String, LinkedList<Integer>>();
+
+		Set<String> keySet = solutionSet.keySet();
+		for (String key : keySet) {
+			cloneMap.put(key, (LinkedList<Integer>) solutionSet.get(key).clone());
 		}
+
+		return cloneMap;
 	}
 
 }
