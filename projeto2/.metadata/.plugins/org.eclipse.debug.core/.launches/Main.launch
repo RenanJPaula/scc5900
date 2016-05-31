@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/dtw/src/br/com/usp/dtw/Main.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="br.com.usp.dtw.Main"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-trf &quot;/home/renanjpaula/workspace/java/scc5900/projeto2/dtw/resources/treino.txt&quot; -tef &quot;/home/renanjpaula/workspace/java/scc5900/projeto2/dtw/resources/teste.txt&quot; -w 100"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="dtw"/>
+</launchConfiguration>

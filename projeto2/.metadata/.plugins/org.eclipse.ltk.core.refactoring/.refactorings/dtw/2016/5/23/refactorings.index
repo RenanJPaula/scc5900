@@ -1,0 +1,5 @@
+1464662991595	Delete element
+1464662993205	Delete element
+1464663164979	Rename local variable 'testSeries'
+1464663172607	Rename local variable 'trainingSeries'
+1464663251712	Rename method 'readFileToTemporalSeries'

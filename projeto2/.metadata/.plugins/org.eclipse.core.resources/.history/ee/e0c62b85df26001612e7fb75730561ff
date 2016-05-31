@@ -1,0 +1,72 @@
+package br.com.usp.dtw;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
+public class Main {
+
+	public static final String SEPARATOR = " ";
+
+	public static void main(String[] args) throws ParseException, IOException {
+		Options options = new Options();
+		options.addOption("h", "help", false, "command overview");
+		options.addOption("trf", "trainingfile", true, "traning file path [required]");
+		options.addOption("tef", "testfile", true, "test file path [required]");
+		options.addOption("w", "bandwidth", true, "band width value");
+
+		CommandLineParser parser = new DefaultParser();
+		CommandLine cmd = parser.parse(options, args);
+
+		final boolean help = cmd.hasOption("h");
+		final String trainingFile = cmd.getOptionValue("trf");
+		final String testFile = cmd.getOptionValue("tef");
+		final Integer bandWidth = cmd.hasOption("w") ? Integer.valueOf(cmd.getOptionValue("w")) : -1;
+		
+
+		if (help) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("DTW", options);
+		} else if (trainingFile == null || testFile == null) {
+			System.err.println("Traning file and Test file is required. See more in -h or --help option.");
+		} else {
+			final List<Double[]> trainingValues = Main.fileToTemporalValues(trainingFile);
+			final List<Double[]> testValues = Main.fileToTemporalValues(testFile);
+			
+			final NearestNeighbor classificassion = OneNearestNeighbor.getInstance();
+			
+			final long startTime = System.nanoTime();
+			
+			final double accuracyRate;
+			
+			if (bandWidth >= 0) {
+				final int w = Integer.parseInt(args[w]);
+				accuracyRate = classificassion.computeAccuracyRate(trainingValues, testValues, w);
+			} else {
+				accuracyRate = classificassion.computeAccuracyRate(trainingValues, testValues);
+			}
+		}
+	}
+
+	private static List<Double[]> fileToTemporalValues(final String fileUri) throws IOException {
+		final Path path = Paths.get(fileUri);
+		final List<Double[]> temporalSeries = new ArrayList<>();
+		Files.lines(path).forEach(row -> {
+			final Double[] serie = Stream.of(SEPARATOR.split(row)).map(Double::parseDouble).toArray(Double[]::new);
+			temporalSeries.add(serie);
+		});
+		return temporalSeries;
+	}
+
+}
