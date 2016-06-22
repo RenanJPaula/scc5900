@@ -1,19 +1,10 @@
 # Relação de recorrência:
 
-OPT(I) = MAX{ OPT(i + 1), OPT(i + 2) + V[i] }
+A-) opt(I) = max{ opt(i + 1), opt(i + 2) + v[i] }
 
-# Implementação recursiva:
+B-) opt(i, j) = opt(i + 1, j) + opt(i, j + 1)
 
-```js
-var valorCasas = [10, 50, 5, 0, 25];
+# Implementações:
 
-function opt(i) {
-  if(valorCasas.length <= i) {
-    return 0;
-  } else {
-    return Math.max(opt(i + 1), opt(i + 2) + valorCasas[i]);
-  }
-}
-
-console.log(opt(0));
-```
+- [Recursivo a](./recursivo-a.js)
+- [Recursivo b](./recursivo-b.js)
