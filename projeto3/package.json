@@ -1,0 +1,17 @@
+{
+  "name": "word-wrap",
+  "version": "1.0.0",
+  "description": "SC5900 - Projeto de algoritimos",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Word Wrap",
+    "PD",
+    "Memória O(n)",
+    "Performace O(n*n)"
+  ],
+  "author": "Renan Johannsen de Paula",
+  "license": "ISC"
+}
