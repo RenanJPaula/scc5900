@@ -13,5 +13,8 @@
     "Performace O(n*n)"
   ],
   "author": "Renan Johannsen de Paula",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^2.9.0"
+  }
 }
