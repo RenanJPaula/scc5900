@@ -8,6 +8,10 @@ O programa é composto basicamente por três arquivos.
 
 # Execução:
 
+Para download das dependencias:
+
+$ npm install
+
 Para realizar a execução do programa é necessário a instalação do nodejs junto do npm.
 Sua invocação se dá pelo seguinte comando:
 
